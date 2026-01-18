@@ -12,19 +12,24 @@ void oled_task(void *arg)
     while (1) {
         ssd1306_clear();
 
+        // Text rotated 90 degrees right, spread across full 64-pixel height
+        
+        // Top: WiFi status (y=0, yellow section)
         snprintf(line, sizeof(line), "WiFi: %s",
                  g_state.wifi_connected ? "OK" : "ERR");
         ssd1306_draw_string(0, 0, line);
 
+        // Middle: IP address (y=16, middle blue section)
         if (g_state.wifi_connected)
-            ssd1306_draw_string(0, 12, g_state.ip);
+            snprintf(line, sizeof(line), "IP: %s", g_state.ip);
+        else
+            snprintf(line, sizeof(line), "Connecting");
+        ssd1306_draw_string(8, 16, line);
 
+        // Bottom: MQTT status (y=32, lower blue section)
         snprintf(line, sizeof(line), "MQTT: %s",
                  g_state.mqtt_connected ? "OK" : "ERR");
-        ssd1306_draw_string(0, 24, line);
-
-        snprintf(line, sizeof(line), "Uptime: %lus", g_state.uptime_sec);
-        ssd1306_draw_string(0, 36, line);
+        ssd1306_draw_string(16, 32, line);
 
         ssd1306_update();
         vTaskDelay(pdMS_TO_TICKS(1000));
