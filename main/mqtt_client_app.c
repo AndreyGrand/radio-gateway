@@ -16,6 +16,10 @@ void mqtt_app_start(void)
         .broker.address.uri = CONFIG_MQTT_URI,
         .credentials.username = CONFIG_MQTT_USER,
         .credentials.authentication.password = CONFIG_MQTT_PASS,
+        .session.keepalive = 60,  // Send PING every 60 seconds
+        .session.protocol_ver = MQTT_PROTOCOL_V_3_1_1,
+        .network.disable_auto_reconnect = false,  // Enable auto-reconnect
+        .task.stack_size = 4096,  // Increase stack size for MQTT task
     };
 
     esp_mqtt_client_handle_t client = esp_mqtt_client_init(&cfg);

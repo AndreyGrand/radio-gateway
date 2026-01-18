@@ -4,6 +4,7 @@
 #include "esp_event.h"
 #include "esp_log.h"
 #include "esp_netif.h"
+#include "nvs_flash.h"
 #include "mqtt_client.h"
 #include "system_state.h"
 
@@ -45,6 +46,14 @@ else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
 
 void wifi_init_sta(void)
 {
+    // Initialize NVS - required by WiFi driver
+    esp_err_t ret = nvs_flash_init();
+    if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+        ESP_ERROR_CHECK(nvs_flash_erase());
+        ret = nvs_flash_init();
+    }
+    ESP_ERROR_CHECK(ret);
+
     ESP_ERROR_CHECK(esp_netif_init());
     ESP_ERROR_CHECK(esp_event_loop_create_default());
 

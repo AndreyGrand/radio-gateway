@@ -6,7 +6,6 @@
 /* прототипы других функций */
 void wifi_init_sta(void);
 void oled_task(void *arg);
-void mqtt_app_start(void);
 
 void app_main(void)
 {
@@ -15,5 +14,5 @@ void app_main(void)
     xTaskCreate(uptime_task, "uptime", 2048, NULL, 1, NULL);
     xTaskCreate(oled_task, "oled", 4096, NULL, 1, NULL);
 
-    mqtt_app_start();
+    // MQTT will start automatically when WiFi gets IP (via wifi_event_handler)
 }

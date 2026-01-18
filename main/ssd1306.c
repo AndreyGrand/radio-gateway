@@ -1,7 +1,10 @@
 #include "ssd1306.h"
-#include "driver/i2c.h"
+#include "driver/i2c_master.h"
 #include "esp_log.h"
+#include "freertos/FreeRTOS.h"
 #include <string.h>
+
+static const char *TAG = "ssd1306";
 
 #define I2C_PORT I2C_NUM_0
 #define SDA_PIN 21
@@ -9,17 +12,13 @@
 #define OLED_ADDR 0x3C
 
 static uint8_t buffer[128 * 64 / 8];
+static i2c_master_bus_handle_t bus_handle;
+static i2c_master_dev_handle_t dev_handle;
 
 static void i2c_write(uint8_t control, uint8_t data)
 {
-    i2c_cmd_handle_t cmd = i2c_cmd_link_create();
-    i2c_master_start(cmd);
-    i2c_master_write_byte(cmd, (OLED_ADDR << 1) | I2C_MASTER_WRITE, true);
-    i2c_master_write_byte(cmd, control, true);
-    i2c_master_write_byte(cmd, data, true);
-    i2c_master_stop(cmd);
-    i2c_master_cmd_begin(I2C_PORT, cmd, 100 / portTICK_PERIOD_MS);
-    i2c_cmd_link_delete(cmd);
+    uint8_t write_buffer[2] = {control, data};
+    i2c_master_transmit(dev_handle, write_buffer, sizeof(write_buffer), -1);
 }
 
 static void ssd1306_cmd(uint8_t cmd) { i2c_write(0x00, cmd); }
@@ -27,16 +26,24 @@ static void ssd1306_data(uint8_t data) { i2c_write(0x40, data); }
 
 void ssd1306_init(void)
 {
-    i2c_config_t cfg = {
-        .mode = I2C_MODE_MASTER,
+    // Configure I2C bus
+    i2c_master_bus_config_t bus_cfg = {
+        .i2c_port = I2C_PORT,
         .sda_io_num = SDA_PIN,
         .scl_io_num = SCL_PIN,
-        .sda_pullup_en = GPIO_PULLUP_ENABLE,
-        .scl_pullup_en = GPIO_PULLUP_ENABLE,
-        .master.clk_speed = 400000,
+        .clk_source = I2C_CLK_SRC_DEFAULT,
+        .glitch_ignore_cnt = 7,
+        .flags.enable_internal_pullup = true,
     };
-    i2c_param_config(I2C_PORT, &cfg);
-    i2c_driver_install(I2C_PORT, cfg.mode, 0, 0, 0);
+    ESP_ERROR_CHECK(i2c_new_master_bus(&bus_cfg, &bus_handle));
+
+    // Configure I2C device
+    i2c_device_config_t dev_cfg = {
+        .dev_addr_length = I2C_ADDR_BIT_LEN_7,
+        .device_address = OLED_ADDR,
+        .scl_speed_hz = 400000,
+    };
+    ESP_ERROR_CHECK(i2c_master_bus_add_device(bus_handle, &dev_cfg, &dev_handle));
 
     ssd1306_cmd(0xAE); ssd1306_cmd(0x20); ssd1306_cmd(0x00);
     ssd1306_cmd(0xB0); ssd1306_cmd(0xC8); ssd1306_cmd(0x00);
