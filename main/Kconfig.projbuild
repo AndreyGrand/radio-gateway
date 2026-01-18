@@ -1,0 +1,20 @@
+menu "Application Configuration"
+
+config WIFI_SSID
+    string "WiFi SSID"
+    default "Room63"
+
+config WIFI_PASSWORD
+    string "WiFi Password"
+    default "!2019Inet63"
+
+config MQTT_URI
+    string "MQTT Broker URI"
+    default "mqtt://192.168.1.99:1883"
+
+config MQTT_USER
+    string "MQTT Username"
+
+config MQTT_PASS
+    string "MQTT Password"
+endmenu
