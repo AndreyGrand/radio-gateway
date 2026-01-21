@@ -1,3 +1,4 @@
 
 #pragma once
 void nrf24_init(void);
+void nrf24_configure(void);
