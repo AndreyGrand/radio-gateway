@@ -12,3 +12,4 @@ typedef struct {
 } system_state_t;
 
 extern system_state_t g_state;
+void system_state_init(void);

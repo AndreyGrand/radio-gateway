@@ -7,6 +7,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "esp_log.h"
 
 extern volatile uint32_t g_last_ack_num;
 
@@ -16,6 +17,7 @@ void radio_task(void *arg)
 
     nrf24_init();
     nrf24_set_rx_mode();
+    ESP_LOGI("RADIO", "radio_task started");
 
     while (1) {
         if (nrf24_irq_pending()) {
@@ -43,7 +45,7 @@ void radio_task(void *arg)
 
             g_state.radio_rx++;
             radio_rx_push(msg);
-
+            ESP_LOGI("STATE", "radio_rx=%lu", g_state.radio_rx);
             rack_t ack = {
                 .dst = msg->hdr.dst,
                 .num = msg->hdr.num

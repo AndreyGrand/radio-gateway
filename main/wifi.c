@@ -7,10 +7,12 @@
 #include "nvs_flash.h"
 #include "mqtt_client.h"
 #include "system_state.h"
+#include "mqtt/mqtt_client_app.h"
 
 static const char *TAG = "wifi";
 
 extern void mqtt_app_start(void);
+extern void mqtt_app_stop(void);
 
 static void wifi_event_handler(void *arg,
                                esp_event_base_t event_base,
@@ -33,15 +35,16 @@ else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
 }
 else if (event_base == WIFI_EVENT &&
          event_id == WIFI_EVENT_STA_DISCONNECTED) {
-
+    ESP_LOGW(TAG, "WiFi disconnected, stopping MQTT...");
     g_state.wifi_connected = false;
+    mqtt_app_stop();  // ✅ Остановить MQTT при разрыве WiFi
 }
-else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
-    ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
-    ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
+// else if (event_base == IP_EVENT && event_id == IP_EVENT_STA_GOT_IP) {
+//     ip_event_got_ip_t *event = (ip_event_got_ip_t *)event_data;
+//     ESP_LOGI(TAG, "Got IP: " IPSTR, IP2STR(&event->ip_info.ip));
 
-    mqtt_app_start();   // ✅ ТОЛЬКО ЗДЕСЬ
-    }
+//     mqtt_app_start();   // ✅ ТОЛЬКО ЗДЕСЬ
+//     }
 }
 
 void wifi_init_sta(void)
